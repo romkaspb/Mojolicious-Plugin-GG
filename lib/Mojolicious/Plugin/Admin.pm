@@ -8,7 +8,7 @@ our $VERSION = '0.01';
 sub register {
   my ($self, $app) = @_;
   # INIT
-  $app->title('GGSB Admin Panel ('. $app->mode .')');
+
   # Append "templates" and "public" directories
   my $base = path(__FILE__)->dirname->child('Admin');
   push @{$app->renderer->paths}, $base->child('templates')->to_string;
