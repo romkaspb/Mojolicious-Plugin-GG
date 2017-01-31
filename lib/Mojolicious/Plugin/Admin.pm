@@ -3,9 +3,10 @@ use Mojo::Base 'Mojolicious::Plugin';
 
 use Mojo::File 'path';
 
+use Mojolicious::Plugin::Admin::Panel;
+
 our $VERSION = '0.01';
 
-has panel => sub { Mojolicious::Plugin::Admin::Panel->new(shift) };
 
 sub register {
   my ($self, $app, $config) = @_;
@@ -18,11 +19,10 @@ sub register {
   $app->defaults(layout => 'admin');
 
   $config = undef unless keys %$config;
-  die $config;
-  $config ||= $app->plugin('Config', { file => 'admin.conf' }) || die __PACKAGE__." no config defined";
 
-  $app->config->{admin} = $config;
-
+  $config = $app->plugin('Config', { file => 'admin.conf' }) || die __PACKAGE__." no config defined";
+  $config = $config->{admin};
+  # $app->panel( $config );
   my $r = $app->routes;
   # generate routes first
   $r->add_shortcut(resource => sub {
@@ -40,12 +40,15 @@ sub register {
     return $resource;
   });
 
+ # my $routes_names_array = _build_routes_array( $config->{controllers}, undef );
+
   my $admin = $r->under('/admin')->to(cb => sub {
     my $self = shift;
 
     # check auth
     return 1;
   });
+
   $admin->get('/')->to(cb => sub {
     shift->render('index');
     });
@@ -54,50 +57,48 @@ sub register {
 
   });
 
-  $self->panel( $config );
+  $admin->resource('texts');
 
+  # $app->attr(panel => Mojolicious::Plugin::Admin::Panel->new( $config ));
+  #unless (ref($app)->can('panel')) {
+    ref($app)->attr('panel');
+    $app->panel(Mojolicious::Plugin::Admin::Panel->new( $config ));
+  # #}
 
-  $app->helper( 'admin.generate_routes' => sub {
-    my $self = shift;
-    my $config = shift;
-
-    my $routes_names_array = _build_routes_array( $config->{controllers}, undef );
-    die $self->dumper( $config );
-    die $self->dumper( $routes_names_array );
-  });
-
-
-  $app->hook( before_dispatch => sub { my $c = shift; $c->admin->generate_routes; } );
+# $app->hook( before_dispatch => sub { my $c = shift; $c->admin->generate_routes; } );
 }
 
-sub _build_routes_array{
-  my ( $self, $controllers, $routes, $current ) = @_;
-  $routes   ||= [];
-  $current  ||= [];
+# sub _build_routes_array{
+#   my ( $controllers, $routes, $current ) = @_;
+#   $routes   ||= [];
+#   $current  ||= [];
+#   use Data::Dumper;
+#   warn Dumper $current;
+#   if ( scalar @$current ){
 
-  if ( scalar @$current ){
-    my $ckey = $current->[ scalar @$current ];
+#     my $ckey = $current->[ scalar @$current ];
+#   # warn $ckey;
+#     push @$current, $ckey;
 
-    push @$current, $ckey;
+#     if( $controllers->{ $ckey }->{nested} ){
+#       _build_routes_array( $controllers->{ $ckey }, $routes, $current );
+#     }else{
+#       push @$routes, $current;
+#     }
+#   }
 
-    if( $controllers->{ $ckey }->{nested} ){
-      _build_routes_array( $controllers->{ $ckey }, $routes, $current );
-    }else{
-      push @$routes, $current;
-    }
-  }
+#   foreach my $ckey ( keys %$controllers ){
+#     push @$current, $ckey if $ckey ne 'nested';
+#     #warn $ckey;
+#     if( $controllers->{ $ckey }->{nested} ){
+#       _build_routes_array( $controllers->{ $ckey }, $routes, $current );
+#     }else{
+#       push @$routes, $current;
+#     }
+#   }
 
-  foreach my $ckey ( keys %$controllers ){
-    push @$current, $ckey;
-    if( $controllers->{ $ckey }->{nested} ){
-      _build_routes_array( $controllers->{ $ckey }, $routes, $current );
-    }else{
-      push @$routes, $current;
-    }
-  }
-
-  return $routes;
-}
+#   return $routes;
+# }
 
 1;
 
