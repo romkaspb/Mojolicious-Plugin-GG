@@ -5,8 +5,9 @@ use Mojo::File 'path';
 
 use Mojolicious::Plugin::GG::Panel;
 
-has version => '0.01';
-
+BEGIN {
+  $Mojolicious::Plugin::GG::VERSION = '0.01';
+}
 
 sub register {
   my ($self, $app, $config) = @_;

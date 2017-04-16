@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin::GG';
 use Mojolicious::Plugin::GG::Panel::Controller;
 use Mojolicious::Plugin::GG::Panel::Key;
 
-# has version     => $Mojolicious::Plugin::GG::VERSION;
+has version     => $Mojolicious::Plugin::GG::VERSION;
 has current_controller => undef;
 # has settings    => {};
 # has keys        => [];
